@@ -71,8 +71,8 @@
     height: 240px;
     cursor: pointer;
     perspective: 900px;
-    /* fade out after card is free */
     transition: opacity 0.4s ease 0s, transform 0.4s ease 0s;
+    flex-shrink: 0;
   }
   .envelope-wrap.gone {
     opacity: 0;
@@ -84,7 +84,6 @@
     box-shadow: 0 14px 70px #7c3aed88;
   }
 
-  /* Envelope body — overflow:hidden so card is invisible while inside */
   .env-body {
     position: absolute;
     inset: 0;
@@ -93,7 +92,6 @@
     box-shadow: 0 10px 50px #00000077;
     overflow: hidden;
   }
-  /* V-fold decoration */
   .env-body::before {
     content: '';
     position: absolute; inset: 0;
@@ -103,7 +101,6 @@
     pointer-events: none;
   }
 
-  /* Top flap — triangle via clip-path */
   .env-flap {
     position: absolute;
     top: 0; left: 0;
@@ -119,7 +116,6 @@
   }
   .envelope-wrap.opened .env-flap { transform: rotateX(-180deg); }
 
-  /* Wax seal */
   .seal {
     position: absolute;
     top: 110px; left: 50%;
@@ -140,30 +136,25 @@
   }
 
   /* ════════════════════════════════
-     CARD — starts inside envelope (z behind env-body, scaled to 0)
-     then flies to center of screen
+     CARD
+     — posición inicial calculada por JS en base al centro real del sobre
+     — sube al centro exacto de la pantalla al abrirse
   ════════════════════════════════ */
   .card-wrapper {
-    /* initially positioned inside the envelope area */
-    position: fixed;           /* fixed so we can center it on screen */
-    top: 50%; left: 50%;
-    transform: translate(-50%, 130px) scaleY(0); /* 130px = below center ~ envelope position */
-    transform-origin: bottom center;
+    position: fixed;
     width: 320px;
-    height: 210px;
-    z-index: 5;                /* starts behind the envelope (z-index 10) */
+    height: 220px;
+    z-index: 5;
     perspective: 1000px;
     pointer-events: none;
-    /* no transition while closed */
-    transition: none;
+    /* posición y transform inicial se setean por JS */
+    will-change: transform;
   }
 
-  /* Phase 1: card rises out of envelope to center (delayed after flap opens) */
   .card-wrapper.rising {
-    transform: translate(-50%, -50%) scaleY(1);
-    transition: transform 0.85s cubic-bezier(0.34, 1.2, 0.64, 1) 0.45s;
     z-index: 30;
     pointer-events: auto;
+    /* el transform final también se setea por JS */
   }
 
   /* ── 3D flip ── */
@@ -197,14 +188,19 @@
   }
   .card-front h1 {
     font-family: 'Playfair Display', serif;
-    font-size: 1.65rem;
+    font-size: 1.5rem;
     color: #7c3aed;
     text-align: center;
     line-height: 1.2;
   }
-  .card-front .sub { font-size: 1.05rem; color: #92400e; text-align: center; }
-  .emoji-dec { font-size: 1.6rem; }
-  .flip-hint { font-size: 0.78rem; color: #b45309; opacity: 0.55; margin-top: 4px; }
+  .card-front .sub {
+    font-size: 0.92rem;
+    color: #92400e;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .emoji-dec { font-size: 1.5rem; }
+  .flip-hint { font-size: 0.75rem; color: #b45309; opacity: 0.55; margin-top: 4px; }
 
   /* Back */
   .card-back {
@@ -212,20 +208,20 @@
     box-shadow: 0 12px 48px #0005;
     border: 1.5px solid #86efac;
     transform: rotateY(180deg);
+    gap: 10px;
   }
   .card-back h2 {
     font-family: 'Playfair Display', serif;
     font-size: 1rem;
     color: #166534;
     font-style: italic;
-    margin-bottom: 4px;
   }
-  .back-text {
-    font-size: 1.1rem;
-    color: #14532d;
-    text-align: center;
-    line-height: 1.6;
-    white-space: pre-wrap;
+  .card-back video {
+    border-radius: 12px;
+    max-width: 100%;
+    height: 130px;
+    object-fit: cover;
+    box-shadow: 0 4px 16px #0004;
   }
 </style>
 </head>
@@ -233,28 +229,26 @@
 
 <div class="emoji-bg" id="emojiBg"></div>
 <div class="confetti-container" id="confetti"></div>
-<p class="hint" id="hint"></p>
+<p class="hint" id="hint">✉️ Tocá el sobre para abrirlo</p>
 
-<!-- CARD: exists in DOM independently, starts visually "inside" envelope via transform -->
+<!-- CARD -->
 <div class="card-wrapper" id="cardWrapper">
   <div class="card-3d" id="card3d">
     <div class="card-face card-front">
-      <div class="emoji-dec"</div>
-      <h1>feli cumplanio 16</h1>
-      <p class="sub">judia, agente del mossad, sionista, beneficiante del estado ilegitimo de israel</p>
-      <div class="emoji-dec"</div>
+      <div class="emoji-dec"></div>
+      <h1>feli cumplanio 16<br> shabbat shalom</h1>
+      <p class="sub">judia, agente del mossad, sionista,<br>beneficiante del estado ilegítimo de israel</p>
+      <div class="emoji-dec"></div>
       <span class="flip-hint">👆 Dale la vuelta a la carta</span>
     </div>
     <div class="card-face card-back">
-      <h2>pues chad no?
-    </h2>
-      <p> <video src="Perkin.mp4" height="150"
-      width="150" border-radius="20"></p>
+      <h2>pues chad no? </h2>
+      <video src="Perkin.mp4" height="200" width="200" controls autoplay muted loop style="border-radius:12px"></video>
     </div>
   </div>
 </div>
 
-<!-- ENVELOPE: rendered on top while closed -->
+<!-- ENVELOPE -->
 <div class="envelope-wrap" id="envelope">
   <div class="env-body"></div>
   <div class="env-flap"></div>
@@ -262,10 +256,6 @@
 </div>
 
 <script>
-  // ═══════════════════════════════════
-  //   EDITÁ ESTE MENSAJE
-  
-
   // Emoji rain
   const emojis = ['🇮🇱','✡️','🕍','🕎','🌟','💙','🤍','🎂','🎉','🥳','🎊','🎈','✨','💜','🎁'];
   const bg = document.getElementById('emojiBg');
@@ -286,25 +276,59 @@
   const hint    = document.getElementById('hint');
   let opened = false, flipped = false;
 
-  // Click envelope → sequence: flap opens → card rises → envelope fades
+  // ── Calcular posición inicial de la carta en base al sobre real ──
+  function initCard() {
+    const envRect = env.getBoundingClientRect();
+    const cw = wrapper.offsetWidth;
+    const ch = wrapper.offsetHeight;
+
+    // Centrar la carta horizontalmente sobre el sobre
+    const left = envRect.left + (envRect.width / 2) - (cw / 2);
+    // Colocar la carta en la parte inferior del sobre (invisible, tapada por el sobre)
+    const top  = envRect.top  + (envRect.height / 2) - (ch / 2);
+
+    wrapper.style.left = left + 'px';
+    wrapper.style.top  = top  + 'px';
+    // scaleY(0) → invisible, desde el centro del sobre
+    wrapper.style.transform = 'scaleY(0)';
+    wrapper.style.transformOrigin = 'center center';
+    wrapper.style.transition = 'none';
+  }
+
+  // ── Al abrir: animar al centro exacto de la pantalla ──
+  function riseCard() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cw = wrapper.offsetWidth;
+    const ch = wrapper.offsetHeight;
+
+    const targetLeft = (vw - cw) / 2;
+    const targetTop  = (vh - ch) / 2;
+
+    // Aplicar posición destino
+    wrapper.style.left = targetLeft + 'px';
+    wrapper.style.top  = targetTop  + 'px';
+    wrapper.style.transform = 'scaleY(1)';
+    wrapper.style.transformOrigin = 'center center';
+    wrapper.style.transition = 'left 0.85s cubic-bezier(0.34,1.2,0.64,1) 0.45s, top 0.85s cubic-bezier(0.34,1.2,0.64,1) 0.45s, transform 0.85s cubic-bezier(0.34,1.2,0.64,1) 0.45s';
+    wrapper.style.zIndex = '30';
+    wrapper.style.pointerEvents = 'auto';
+  }
+
+  // Inicializar posición de la carta cuando carga
+  window.addEventListener('load', initCard);
+  window.addEventListener('resize', () => { if (!opened) initCard(); });
+
   env.addEventListener('click', () => {
     if (opened) return;
     opened = true;
 
-    // 1. Open the flap immediately
     env.classList.add('opened');
 
-    // 2. After flap opens (~450ms), start card rising
-    setTimeout(() => {
-      wrapper.classList.add('rising');
-    }, 50);
+    setTimeout(() => riseCard(), 50);
 
-    // 3. Once card is free in the air (~950ms total), disappear envelope
-    setTimeout(() => {
-      env.classList.add('gone');
-    }, 900);
+    setTimeout(() => env.classList.add('gone'), 900);
 
-    // 4. Update hint after card has landed
     setTimeout(() => {
       hint.textContent = '↕️ Dale vuelta a la carta';
     }, 1350);
@@ -312,7 +336,6 @@
     launchConfetti();
   });
 
-  // Click card → flip
   card.addEventListener('click', () => {
     if (!opened) return;
     flipped = !flipped;
@@ -320,7 +343,6 @@
     hint.textContent = flipped ? '↩️ Dale vuelta de nuevo' : '↕️ Dale vuelta a la carta';
   });
 
-  // Confetti
   function launchConfetti() {
     const ct = document.getElementById('confetti');
     const colors = ['#7c3aed','#f59e0b','#10b981','#ef4444','#3b82f6','#ec4899','#fbbf24','#fff'];
@@ -341,4 +363,4 @@
   }
 </script>
 </body>
-  </html>
+</html>
